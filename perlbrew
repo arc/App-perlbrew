@@ -36,9 +36,24 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
       return $self->{root} || $PERLBREW_ROOT;
   }
   
+  my $current;
+  
   sub current_perl {
       my ($self) = @_;
-      return $self->env('PERLBREW_PERL')  || ''
+      return $current if defined($current);
+  
+      # return $self->env('PERLBREW_PERL')  || '';
+  
+      if ( -f "$PERLBREW_HOME/current" ) {
+          open my $fh, "<", "$PERLBREW_HOME/current";
+          $current = <$fh>;
+          close $fh;
+      }
+      else {
+          $current = "";
+      }
+  
+      return $current;
   }
   
   sub BASHRC_CONTENT() {
@@ -1455,6 +1470,17 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
       exec 'rm', '-rf', $dir;
   }
   
+  sub run_command_run {
+      my $self = shift;
+      my @args = @{$self->{original_argv}};
+  
+      shift @args; #=> "run"
+  
+      my $perl_path = join "/", $self->root, "perls", $self->current_perl, "bin";
+      $ENV{PATH} = $perl_path . ":" . $ENV{PATH};
+      exec @args;
+  }
+  
   sub run_command_exec {
       my $self = shift;
       my @args = @{$self->{original_argv}};
@@ -1465,7 +1491,6 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
       }
   
       shift @args;
-  
   
       for my $i ( $self->installed_perls ) {
           next if -l $self->root . '/perls/' . $i->{name}; # Skip Aliases
