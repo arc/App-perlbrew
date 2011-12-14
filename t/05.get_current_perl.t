@@ -1,18 +1,26 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-use lib qw(lib);
-use Test::More tests => 1;
+use Test::More;
+use FindBin;
+use lib $FindBin::Bin;
 use App::perlbrew;
-use Test::Output;
+require 'test_helpers.pl';
+
 
 my $app = App::perlbrew->new();
 my $version = $App::perlbrew::VERSION;
 
-stdout_is(
-    sub {
-        $app->run_command('version');
-    },
-    "t/05.get_current_perl.t  - App::perlbrew/$version\n",
-    'Test version'
-);
+my $current = file($App::perlbrew::PERLBREW_HOME, "current");
+
+ok !-f $current;
+is $app->current_perl, "";
+
+io($current)->print("perl-5.12.3");
+ok -f $current;
+is $app->current_perl, "perl-5.12.3";
+
+io($current)->print("perl-5.14.2");
+is $app->current_perl, "perl-5.14.2";
+
+done_testing;
