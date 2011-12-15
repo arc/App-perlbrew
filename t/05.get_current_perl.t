@@ -11,7 +11,7 @@ require 'test_helpers.pl';
 my $app = App::perlbrew->new();
 my $version = $App::perlbrew::VERSION;
 
-my $current = file($App::perlbrew::PERLBREW_HOME, "current");
+my $current = file($App::perlbrew::PERLBREW_HOME, "version");
 
 ok !-f $current;
 is $app->current_perl, "";
